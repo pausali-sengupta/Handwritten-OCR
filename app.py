@@ -41,6 +41,13 @@ def inject_custom_css():
         margin-bottom: 20px;
     }
 
+    .stSelectbox > div {
+        background-color: #1a2332 !important;
+        border-radius: 12px;
+        border: 1px solid #3e5c76;
+        color: white;
+    }
+
     .stTextArea textarea {
         background-color: #1a2332 !important;
         color: #e0e6ed !important;
@@ -68,7 +75,6 @@ def inject_custom_css():
         border-radius: 12px !important;
     }
 
-    /* Hide sidebar */
     section[data-testid="stSidebar"] {
         display: none;
     }
@@ -81,6 +87,22 @@ inject_custom_css()
 # Title
 st.markdown("<h1>✍️ Handwritten Multi-lingual OCR</h1>", unsafe_allow_html=True)
 st.markdown("<p class='custom-subheader'>Digitize handwritten notes seamlessly across English, Hindi, and Bengali</p>", unsafe_allow_html=True)
+
+# ✅ Language Selector (NEW - Clean UI)
+col_lang1, col_lang2, col_lang3 = st.columns([1, 2, 1])
+with col_lang2:
+    language_display = st.selectbox(
+        "🌐 Select Language",
+        ["English 🇬🇧", "Hindi 🇮🇳", "Bengali 🇧🇩/🇮🇳"]
+    )
+
+lang_mapping = {
+    "English 🇬🇧": "eng",
+    "Hindi 🇮🇳": "hin",
+    "Bengali 🇧🇩/🇮🇳": "ben"
+}
+
+selected_language = lang_mapping[language_display]
 
 # Layout
 col1, space, col2 = st.columns([1, 0.1, 1])
@@ -97,7 +119,6 @@ with col1:
     if uploaded_file is not None:
         image = Image.open(uploaded_file)
 
-        # Fix rotation issue
         try:
             image = ImageOps.exif_transpose(image)
         except:
@@ -119,8 +140,7 @@ with col2:
         if 'extract_clicked' in locals() and extract_clicked:
             with st.spinner("Analyzing handwriting..."):
                 try:
-                    # Default language = English
-                    extracted_text = extract_text(image, "eng")
+                    extracted_text = extract_text(image, selected_language)
 
                     if not extracted_text.strip():
                         st.warning("No readable text found. Try a clearer image.")
@@ -133,7 +153,7 @@ with col2:
                         st.download_button(
                             label="📥 Download as .TXT",
                             data=extracted_text,
-                            file_name="extracted_text.txt",
+                            file_name=f"extracted_text_{selected_language}.txt",
                             mime="text/plain",
                             use_container_width=True
                         )
@@ -146,14 +166,3 @@ with col2:
 
     else:
         st.info("Awaiting file upload...")
-        st.markdown(
-            """
-            <div style='background-color: #1a2332; padding: 20px; border-radius: 12px; text-align: center;'>
-                🎨 <strong>Tips for better results:</strong><br><br>
-                - Use clear handwriting<br>
-                - Ensure good lighting<br>
-                - Avoid tilted images
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
